@@ -1,0 +1,74 @@
+apply plugin: 'com.android.model.library'
+
+model {
+    android {
+        compileSdkVersion = 25
+        buildToolsVersion = "25.0.2"
+
+        defaultConfig {
+            minSdkVersion.apiLevel = 19
+            targetSdkVersion.apiLevel = 25
+            versionCode = 1
+            versionName = "1.0"
+
+        }
+
+        ndk{
+            moduleName = "androidblendit"
+            cppFlags.add("-std=c++11")
+            cppFlags.add("-frtti")
+            cppFlags.add("-fexceptions")
+            cppFlags.add("-I${file(getOpenCVDir())}".toString())
+            ldLibs.addAll(["android", "opencv_java3", "EGL", "GLESv2", "dl", "log", "z"])
+            stl = "gnustl_static"
+        }
+
+        buildTypes {
+            release {
+                minifyEnabled false
+                proguardFiles.add(file('proguard-android.txt'))
+            }
+        }
+
+        abis {
+            create("arm64-v8a") {
+                ldFlags.add("-L${file('src/main/jniLibs/arm64-v8a')}".toString())
+            }
+            create("armeabi") {
+                ldFlags.add("-L${file('src/main/jniLibs/armeabi')}".toString())
+            }
+            create("armeabi-v7a") {
+                ldFlags.add("-L${file('src/main/jniLibs/armeabi-v7a')}".toString())
+            }
+            create("mips") {
+                ldFlags.add("-L${file('src/main/jniLibs/mips')}".toString())
+            }
+            create("mips64") {
+                ldFlags.add("-L${file('src/main/jniLibs/mips64')}".toString())
+            }
+            create("x86") {
+                ldFlags.add("-L${file('src/main/jniLibs/x86')}".toString())
+            }
+            create("x86_64") {
+                ldFlags.add("-L${file('src/main/jniLibs/x86_64')}".toString())
+            }
+        }
+    }
+}
+
+def getOpenCVDir() {
+    Properties properties = new Properties()
+    properties.load(new File(rootDir.absolutePath + "/local.properties").newDataInputStream())
+    def externalModuleDir = properties.getProperty('opencv.dir', null)
+    if (externalModuleDir == null) {
+        throw new GradleException(
+                "OpenCV location not found. Define location with opencv.dir in the local.properties file!")
+    }
+    return externalModuleDir
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.android.support:appcompat-v7:25.2.0'
+    compile project(':openCVLibrary320')
+}
